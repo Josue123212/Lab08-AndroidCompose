@@ -39,7 +39,7 @@ android {
         compose = true
     }
 }
-
+val room_version = "2.6.1"
 dependencies {
 
     implementation(libs.androidx.core.ktx)
@@ -57,4 +57,6 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    implementation("androidx.room:room-ktx:${room_version}")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:${room_version}")
 }
