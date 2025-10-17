@@ -65,4 +65,7 @@ dependencies {
 
     // Lifecycle ViewModel for Compose (use a compatible lifecycle version)
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
+
+    // Material Icons para Compose (para FAB y acciones)
+    implementation("androidx.compose.material:material-icons-extended")
 }
