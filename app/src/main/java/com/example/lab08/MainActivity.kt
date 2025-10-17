@@ -1,5 +1,6 @@
 package com.example.lab08
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -15,6 +16,7 @@ import kotlinx.coroutines.launch
 import com.example.lab08.ui.theme.Lab08Theme
 
 class MainActivity : ComponentActivity() {
+    @SuppressLint("ViewModelConstructorInComposable")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -94,3 +96,4 @@ fun TaskScreen(viewModel: TaskViewModel) {
         }
     }
 }
+

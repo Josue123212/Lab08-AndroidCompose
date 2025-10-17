@@ -57,6 +57,12 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    // Room: runtime + Kotlin extensions + compiler (kapt)
+    implementation("androidx.room:room-runtime:${room_version}")
     implementation("androidx.room:room-ktx:${room_version}")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:${room_version}")
+    kapt("androidx.room:room-compiler:${room_version}")
+
+    // Lifecycle ViewModel for Compose (use a compatible lifecycle version)
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
 }
