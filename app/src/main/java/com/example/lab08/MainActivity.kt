@@ -42,111 +42,157 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun TaskScreen(viewModel: TaskViewModel) {
     val tasks by viewModel.tasks.collectAsState()
-    val coroutineScope = rememberCoroutineScope()
-    var newTaskDescription by remember { mutableStateOf("") }
     var searchQuery by remember { mutableStateOf("") }
     var editingTask by remember { mutableStateOf<Task?>(null) }
     var editedDescription by remember { mutableStateOf("") }
+    var showAddDialog by remember { mutableStateOf(false) }
+    var newTaskDescription by remember { mutableStateOf("") }
 
-    // Filtra por búsqueda simple
     val visibleTasks = tasks.filter { it.description.contains(searchQuery, ignoreCase = true) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        // Barra de búsqueda
-        TextField(
-            value = searchQuery,
-            onValueChange = { searchQuery = it },
-            label = { Text("Buscar tareas") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Nueva tarea
-        TextField(
-            value = newTaskDescription,
-            onValueChange = { newTaskDescription = it },
-            label = { Text("Nueva tarea") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Button(
-            onClick = {
-                if (newTaskDescription.isNotEmpty()) {
-                    viewModel.addTask(newTaskDescription)
-                    newTaskDescription = ""
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Column {
+                        Text("Tareas", style = MaterialTheme.typography.titleLarge)
+                        Text("Hoy", style = MaterialTheme.typography.labelSmall)
+                    }
                 }
-            },
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-        ) {
-            Text("Agregar tarea")
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = { showAddDialog = true }) {
+                Icon(imageVector = androidx.compose.material.icons.Icons.Filled.Add, contentDescription = "Agregar tarea")
+            }
         }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(16.dp)
+        ) {
+            // Barra de búsqueda
+            TextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                label = { Text("Buscar tareas") },
+                modifier = Modifier.fillMaxWidth()
+            )
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-        // Lista de tareas con acciones: completar, editar y eliminar
-        visibleTasks.forEach { task ->
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(text = task.description)
-                Row {
-                    Button(onClick = { viewModel.toggleTaskCompletion(task) }) {
-                        Text(if (task.isCompleted) "Completada" else "Pendiente")
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(onClick = {
-                        editingTask = task
-                        editedDescription = task.description
-                    }) {
-                        Text("Editar")
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(onClick = { viewModel.deleteTask(task) }) {
-                        Text("Eliminar")
-                    }
+            // Lista estilo Google Tasks
+            androidx.compose.foundation.lazy.LazyColumn(modifier = Modifier.fillMaxSize()) {
+                androidx.compose.foundation.lazy.items(visibleTasks) { task ->
+                    TaskItem(
+                        task = task,
+                        onToggle = { viewModel.toggleTaskCompletion(task) },
+                        onEdit = {
+                            editingTask = task
+                            editedDescription = task.description
+                        },
+                        onDelete = { viewModel.deleteTask(task) }
+                    )
                 }
             }
         }
+    }
 
-        // Diálogo para editar descripción
-        if (editingTask != null) {
-            AlertDialog(
-                onDismissRequest = { editingTask = null },
-                confirmButton = {
-                    TextButton(onClick = {
-                        val t = editingTask!!
-                        viewModel.editTask(t, editedDescription)
-                        editingTask = null
-                    }) { Text("Guardar") }
-                },
-                dismissButton = {
-                    TextButton(onClick = { editingTask = null }) { Text("Cancelar") }
-                },
-                title = { Text("Editar tarea") },
-                text = {
-                    TextField(
-                        value = editedDescription,
-                        onValueChange = { editedDescription = it },
-                        label = { Text("Descripción") },
-                        modifier = Modifier.fillMaxWidth()
+    // Diálogo para añadir tarea (activado por FAB)
+    if (showAddDialog) {
+        AlertDialog(
+            onDismissRequest = { showAddDialog = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    if (newTaskDescription.isNotBlank()) {
+                        viewModel.addTask(newTaskDescription)
+                        newTaskDescription = ""
+                        showAddDialog = false
+                    }
+                }) { Text("Agregar") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddDialog = false }) { Text("Cancelar") }
+            },
+            title = { Text("Nueva tarea") },
+            text = {
+                TextField(
+                    value = newTaskDescription,
+                    onValueChange = { newTaskDescription = it },
+                    label = { Text("Descripción") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        )
+    }
+
+    // Diálogo para editar descripción
+    if (editingTask != null) {
+        AlertDialog(
+            onDismissRequest = { editingTask = null },
+            confirmButton = {
+                TextButton(onClick = {
+                    val t = editingTask!!
+                    viewModel.editTask(t, editedDescription)
+                    editingTask = null
+                }) { Text("Guardar") }
+            },
+            dismissButton = {
+                TextButton(onClick = { editingTask = null }) { Text("Cancelar") }
+            },
+            title = { Text("Editar tarea") },
+            text = {
+                TextField(
+                    value = editedDescription,
+                    onValueChange = { editedDescription = it },
+                    label = { Text("Descripción") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        )
+    }
+}
+
+@Composable
+fun TaskItem(
+    task: Task,
+    onToggle: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row {
+                Checkbox(checked = task.isCompleted, onCheckedChange = { onToggle() })
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(task.description)
+                    Text(
+                        text = if (task.isCompleted) "Completada" else "Pendiente",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = { coroutineScope.launch { viewModel.deleteAllTasks() } },
-            modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
-        ) {
-            Text("Eliminar todas las tareas")
+            }
+            Row {
+                IconButton(onClick = onEdit) {
+                    Icon(imageVector = androidx.compose.material.icons.Icons.Filled.Edit, contentDescription = "Editar")
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(imageVector = androidx.compose.material.icons.Icons.Filled.Delete, contentDescription = "Eliminar")
+                }
+            }
         }
     }
 }
