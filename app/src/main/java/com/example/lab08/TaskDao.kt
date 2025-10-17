@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
+import androidx.room.Delete
 
 
 @Dao
@@ -23,6 +24,11 @@ interface TaskDao {
     // Marcar una tarea como completada o no completada
     @Update
     suspend fun updateTask(task: Task)
+
+
+    // Eliminar una tarea específica
+    @Delete
+    suspend fun deleteTask(task: Task)
 
 
     // Eliminar todas las tareas
